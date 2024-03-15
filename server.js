@@ -41,7 +41,8 @@ app.post('/rides', (request, response) => {
   const ride = new Ride({
     destination: rideData.destination,
     pickup: rideData.pickup,
-    latestArrivalTime: rideData.arrivalTime
+    time: rideData.time
+
   });
   
   ride.save()
