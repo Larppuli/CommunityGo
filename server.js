@@ -2,6 +2,7 @@ const express = require('express');
 const cors = require('cors');
 const app = express();
 const bodyParser = require('body-parser');
+const axios = require('axios');
 
 app.use(cors());
 app.use(bodyParser.json());
@@ -9,7 +10,7 @@ app.use(bodyParser.json());
 app.use(cors());
 
 const startServer = async () => {
-  const port = process.env.PORT || 3001;
+  const port = 3001;
   app.listen(port, () => {
     console.log(`Server started on port ${port}`);
   });
@@ -24,8 +25,6 @@ require('dotenv').config()
 
 const MONGODB_URI = process.env.MONGODB_URI
 
-console.log('connecting to', MONGODB_URI)
-
 mongoose.connect(MONGODB_URI)
   .then(() => {
     console.log('connected to MongoDB')
@@ -35,24 +34,35 @@ mongoose.connect(MONGODB_URI)
   })
 
 // Kyytikerran lisäys
-app.post('/rides', (request, response) => {
+app.post('/rides', async (request, response) => {
   const rideData = request.body;
   
-  const ride = new Ride({
-    destination: rideData.destination,
-    pickup: rideData.pickup,
-    time: rideData.time
-
-  });
-  
-  ride.save()
-    .then(savedRide => {
-      response.status(201).json(savedRide);
-    })
-    .catch(error => {
-      console.error('Error saving ride:', error);
-      response.status(500).json({ error: 'Error occurred' });
+  try {
+    // Define the parameters to include in the URL
+    const params = new URLSearchParams();
+    params.append('pickup', rideData.pickup.pickup.location);
+    params.append('destination', rideData.destination.geometry.location);
+    params.append('stops', JSON.stringify(rideData.stops));
+    
+    // Make a POST request to Flask server to calculate ride time with parameters
+    const apiResponse = await axios.post(process.env.FLASK_URI, rideData);
+    const rideTime = apiResponse.data.ride_time;
+    
+    // Create a new Ride instance with ride time
+    const ride = new Ride({
+      destination: rideData.destination,
+      pickup: rideData.pickup,
+      arrivalTime: rideData.time,
+      rideTime: rideTime
     });
+    
+    // Save the ride
+    const savedRide = await ride.save();
+    response.status(201).json(savedRide);
+  } catch (error) {
+    console.error('Error saving ride:', error);
+    response.status(500).json({ error: 'Error occurred' });
+  }
 });
 
 // Kyytien haku
