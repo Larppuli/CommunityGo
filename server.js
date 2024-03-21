@@ -33,7 +33,7 @@ mongoose.connect(MONGODB_URI)
     console.log('error connection to MongoDB:', error.message)
   })
 
-// Kyytikerran lisäys
+// Posting ride to the database
 app.post('/rides', async (request, response) => {
   const rideData = request.body;
   
@@ -65,7 +65,7 @@ app.post('/rides', async (request, response) => {
   }
 });
 
-// Kyytien haku
+// Getting rides from the database
 app.get('/rides', (request, response) => {
   Ride.find()
     .then(rides => {
