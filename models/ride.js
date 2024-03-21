@@ -7,7 +7,8 @@ mongoose.connect(url)
 const Ride = mongoose.model('Ride', {
     destination: JSON,
     pickup: JSON,
-    time: String
+    arrivalTime: String,
+    rideTime: Number
     
 })
     
