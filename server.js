@@ -38,14 +38,15 @@ app.post('/rides', async (request, response) => {
   const rideData = request.body;
   
   try {
-    // Define the parameters to include in the URL
-    const params = new URLSearchParams();
-    params.append('pickup', rideData.pickup.pickup.location);
-    params.append('destination', rideData.destination.geometry.location);
-    params.append('stops', JSON.stringify(rideData.stops));
+
+    const cleanRideData = {
+      pickup: rideData.pickup.pickup.location,
+      destination: rideData.destination.geometry.location,
+      stops: [{lat: "", lng: ""}]
+    }
     
     // Make a POST request to Flask server to calculate ride time with parameters
-    const apiResponse = await axios.post(process.env.FLASK_URI, rideData);
+    const apiResponse = await axios.post(process.env.FLASK_URI, cleanRideData);
     const rideTime = apiResponse.data.ride_time;
     
     // Create a new Ride instance with ride time
@@ -69,7 +70,6 @@ app.post('/rides', async (request, response) => {
 app.get('/rides', (request, response) => {
   Ride.find()
     .then(rides => {
-      console.log('Rides retrieved:', rides);
       response.json(rides);
     })
     .catch(error => {
