@@ -32,7 +32,6 @@ def calculate_ride_time():
         waypoints = '|'.join([f'{stop[0]},{stop[1]}' for stop in stops])
         url = f'https://maps.googleapis.com/maps/api/directions/json?origin={pickup["lat"]},{pickup["lng"]}&destination={destination["lat"]},{destination["lng"]}{waypointsFill}&key={api_key}'
         # Send request to Google Directions API
-        print(url)
         response = requests.get(url)
         data = response.json()
 
@@ -43,7 +42,7 @@ def calculate_ride_time():
 
         duration_minutes = total_duration_seconds // 60
 
-        return jsonify({'ride_time': duration_minutes})
+        return jsonify({'ride_time': duration_minutes, 'routes': data['routes']})
     except Exception as e:
         return jsonify({'error': str(e)}), 500
 
