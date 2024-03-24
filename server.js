@@ -47,15 +47,15 @@ app.post('/rides', async (request, response) => {
     
     // Make a POST request to Flask server to calculate ride time with parameters
     const apiResponse = await axios.post(process.env.FLASK_URI, cleanRideData);
-    const rideTime = apiResponse.data.ride_time;
     
     // Create a new Ride instance with ride time
     const ride = new Ride({
       destination: rideData.destination,
       pickup: rideData.pickup,
       arrivalTime: rideData.time,
-      rideTime: rideTime,
-      waypoints: []
+      rideTime: apiResponse.data.ride_time,
+      waypoints: [],
+      routes: apiResponse.data.routes
     });
     
     // Save the ride
@@ -95,6 +95,7 @@ app.put('/rides/:id', async (request, response) => {
     // Update the ride attributes
     ride.rideTime = updateData.rideTime;
     ride.waypoints = updateData.waypoints;
+    ride.routes = updateData.routes;
 
     // Save the updated ride
     const updatedRide = await ride.save();
