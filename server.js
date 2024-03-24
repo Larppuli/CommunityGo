@@ -40,9 +40,9 @@ app.post('/rides', async (request, response) => {
   try {
 
     const cleanRideData = {
-      pickup: rideData.pickup.pickup.location,
+      pickup: rideData.pickup.geometry.location,
       destination: rideData.destination.geometry.location,
-      stops: [{lat: "", lng: ""}]
+      waypoints: rideData.waypoints
     }
     
     // Make a POST request to Flask server to calculate ride time with parameters
@@ -54,7 +54,8 @@ app.post('/rides', async (request, response) => {
       destination: rideData.destination,
       pickup: rideData.pickup,
       arrivalTime: rideData.time,
-      rideTime: rideTime
+      rideTime: rideTime,
+      waypoints: []
     });
     
     // Save the ride
@@ -78,3 +79,28 @@ app.get('/rides', (request, response) => {
     });
 });
 
+// Updating a ride in the database
+app.put('/rides/:id', async (request, response) => {
+  const rideId = request.params.id;
+  const updateData = request.body;
+  
+  try {
+    // Find the ride by its ID
+    const ride = await Ride.findById(rideId);
+    
+    if (!ride) {
+      return response.status(404).json({ error: 'Ride not found' });
+    }
+    
+    // Update the ride attributes
+    ride.rideTime = updateData.rideTime;
+    ride.waypoints = updateData.waypoints;
+
+    // Save the updated ride
+    const updatedRide = await ride.save();
+    response.json(updatedRide);
+  } catch (error) {
+    console.error('Error updating ride:', error);
+    response.status(500).json({ error: 'Error occurred' });
+  }
+});
