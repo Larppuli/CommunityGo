@@ -9,7 +9,8 @@ const Ride = mongoose.model('Ride', {
     pickup: JSON,
     arrivalTime: String,
     rideTime: Number,
-    waypoints: Array
+    waypoints: Array,
+    routes: Object
 })
     
 module.exports = Ride
