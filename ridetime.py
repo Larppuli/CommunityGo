@@ -17,7 +17,7 @@ def calculate_ride_time():
         # Adding waypoint coordinates to an array
         stops = []
         waypointsFill = ""
-        if data["waypoints"]:
+        if "waypoints" in data and data["waypoints"]:
             for element in data["waypoints"]:
                 lat = element['geometry']['location']['lat']
                 lng = element['geometry']['location']['lng']
@@ -25,7 +25,6 @@ def calculate_ride_time():
             # Forming a string for the waypoints in api
             waypoints = '|'.join([f'{stop[0]},{stop[1]}' for stop in stops])
             waypointsFill = f'&waypoints=optimize:true|{waypoints}'
-
         # Retrieve the API key from the environmental variable
         api_key = os.environ.get('API_KEY')
         # Construct the URL for Google Directions API with origin, destination, waypoints (stops), and API key. Remove the comma between waypoint coordinates if the coordinates are empty
