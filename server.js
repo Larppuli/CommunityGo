@@ -6,7 +6,6 @@ require('dotenv').config();
 
 // Import route handlers
 const rideRoutes = require('./api/rideRoutes');
-const userRoutes = require('./api/userRoutes');
 
 // Create Express app
 const app = express();
@@ -30,7 +29,6 @@ mongoose.connect(process.env.MONGODB_URI, {
 
 // Mount routes
 app.use('/rides', rideRoutes);
-app.use('/users', userRoutes);
 
 // Start the server
 const PORT = process.env.PORT || 3001;
