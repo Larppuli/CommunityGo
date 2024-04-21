@@ -6,24 +6,24 @@ const Ride = require('../models/ride');
 // Posting ride to the database
 router.post('/', async (request, response) => {
   const rideData = request.body;
-  
   try {
     const cleanRideData = {
-      pickup: rideData.pickup.geometry.location,
       destination: rideData.destination.geometry.location,
-      waypoints: rideData.waypoints
+      waypoints: [{
+        lat: rideData.waypoints[0].geometry.location.lat,
+        lng: rideData.waypoints[0].geometry.location.lng
+      }]
     };
-    
+
     // Make a POST request to Flask server to calculate ride time with parameters
     const apiResponse = await axios.post(process.env.FLASK_URI, cleanRideData);
     
     // Create a new Ride instance with ride time
     const ride = new Ride({
       destination: rideData.destination,
-      pickup: rideData.pickup,
       arrivalTime: rideData.time,
       rideTime: apiResponse.data.ride_time,
-      waypoints: [],
+      waypoints: rideData.waypoints,
       routes: apiResponse.data.routes
     });
     
