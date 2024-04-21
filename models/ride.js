@@ -6,7 +6,6 @@ mongoose.connect(url)
 
 const Ride = mongoose.model('Ride', {
     destination: JSON,
-    pickup: JSON,
     arrivalTime: String,
     rideTime: Number,
     waypoints: Array,
