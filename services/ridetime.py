@@ -8,40 +8,61 @@ CORS(app)
 
 @app.route('/calculate-ride-time', methods=['POST'])
 def calculate_ride_time():
+    api_key = os.environ.get('API_KEY')
     try:
         # Extract origin, destination, and stop points from the request body
         data = request.get_json()
-        pickup = data["pickup"]
         destination = data["destination"]
-
         # Adding waypoint coordinates to an array
         stops = []
-        waypointsFill = ""
-        if "waypoints" in data and data["waypoints"]:
-            for element in data["waypoints"]:
-                lat = element['geometry']['location']['lat']
-                lng = element['geometry']['location']['lng']
-                stops.append((lat, lng))
-            # Forming a string for the waypoints in api
+        for element in data["waypoints"]:
+            lat = element['lat']
+            lng = element['lng']
+            stops.append((lat, lng))
+
+        # Optimizes the shortest duration between waypoint coordinates and destination
+        if len(stops) > 1:
+            origin = stops[0]
+            print("iteration 0 origin: ", origin)
+            stops.pop(0)
             waypoints = '|'.join([f'{stop[0]},{stop[1]}' for stop in stops])
-            waypointsFill = f'&waypoints=optimize:true|{waypoints}'
-        # Retrieve the API key from the environmental variable
-        api_key = os.environ.get('API_KEY')
-        # Construct the URL for Google Directions API with origin, destination, waypoints (stops), and API key. Remove the comma between waypoint coordinates if the coordinates are empty
-        waypoints = '|'.join([f'{stop[0]},{stop[1]}' for stop in stops])
-        url = f'https://maps.googleapis.com/maps/api/directions/json?origin={pickup["lat"]},{pickup["lng"]}&destination={destination["lat"]},{destination["lng"]}{waypointsFill}&key={api_key}'
-        # Send request to Google Directions API
-        response = requests.get(url)
-        data = response.json()
+            print("iteration 0 waypoints: ", waypoints)
+            url = f'https://maps.googleapis.com/maps/api/directions/json?origin={origin[0]},{origin[1]}&destination={destination["lat"]},{destination["lng"]}&waypoints=optimize:true|{waypoints}&key={api_key}'
+            response = requests.get(url)
+            data = response.json()
+            total_duration_seconds = 0
+            for leg in data['routes'][0]['legs']:
+                total_duration_seconds += int(leg['duration']['value'])
+            shortest_duration = total_duration_seconds // 60
+            bestRoutes = data['routes']
+            bestUrl = url
+            stops.insert(0, origin)
+            for i in range(len(stops)-1):
+                possibleOrigin = stops[i+1]
+                print("iteration", i+1, "origin: ", possibleOrigin)
+                stops.pop(i+1)
+                total_duration_seconds = 0
+                waypoints = '|'.join([f'{stop[0]},{stop[1]}' for stop in stops])
+                print("iteration", i+1, "waypoints: ", waypoints)
+                url = f'https://maps.googleapis.com/maps/api/directions/json?origin={possibleOrigin[0]},{possibleOrigin[1]}&destination={destination["lat"]},{destination["lng"]}&waypoints=optimize:true|{waypoints}&key={api_key}'
+                response = requests.get(url)
+                data = response.json()
+                for leg in data['routes'][0]['legs']:
+                    total_duration_seconds += int(leg['duration']['value'])
+                duration_minutes = total_duration_seconds // 60
+                stops.insert(i+1, possibleOrigin)
+                if duration_minutes < shortest_duration:
+                    shortest_duration = duration_minutes
+                    origin = possibleOrigin
+                    bestRoutes = data['routes']
 
-        # Iterate over each leg and sum their durations
-        total_duration_seconds = 0
-        for leg in data['routes'][0]['legs']:
-            total_duration_seconds += int(leg['duration']['value'])
-
-        duration_minutes = total_duration_seconds // 60
-
-        return jsonify({'ride_time': duration_minutes, 'routes': data['routes']})
+        else:
+            url = f'https://maps.googleapis.com/maps/api/directions/json?origin={stops[0][0]},{stops[0][1]}&destination={destination["lat"]},{destination["lng"]}&key={api_key}'
+            response = requests.get(url)
+            data = response.json()
+            shortest_duration = data["routes"][0]["legs"][0]["duration"]["value"] // 60
+            bestRoutes = data['routes']
+        return jsonify({'ride_time': shortest_duration, 'routes': bestRoutes})
     except Exception as e:
         return jsonify({'error': str(e)}), 500
 
