@@ -23,10 +23,8 @@ def calculate_ride_time():
         # Optimizes the shortest duration between waypoint coordinates and destination
         if len(stops) > 1:
             origin = stops[0]
-            print("iteration 0 origin: ", origin)
             stops.pop(0)
             waypoints = '|'.join([f'{stop[0]},{stop[1]}' for stop in stops])
-            print("iteration 0 waypoints: ", waypoints)
             url = f'https://maps.googleapis.com/maps/api/directions/json?origin={origin[0]},{origin[1]}&destination={destination["lat"]},{destination["lng"]}&waypoints=optimize:true|{waypoints}&key={api_key}'
             response = requests.get(url)
             data = response.json()
@@ -39,11 +37,9 @@ def calculate_ride_time():
             stops.insert(0, origin)
             for i in range(len(stops)-1):
                 possibleOrigin = stops[i+1]
-                print("iteration", i+1, "origin: ", possibleOrigin)
                 stops.pop(i+1)
                 total_duration_seconds = 0
                 waypoints = '|'.join([f'{stop[0]},{stop[1]}' for stop in stops])
-                print("iteration", i+1, "waypoints: ", waypoints)
                 url = f'https://maps.googleapis.com/maps/api/directions/json?origin={possibleOrigin[0]},{possibleOrigin[1]}&destination={destination["lat"]},{destination["lng"]}&waypoints=optimize:true|{waypoints}&key={api_key}'
                 response = requests.get(url)
                 data = response.json()
