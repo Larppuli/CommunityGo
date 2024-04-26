@@ -8,23 +8,21 @@ router.post('/', async (request, response) => {
   const rideData = request.body;
   try {
     const cleanRideData = {
-      destination: rideData.destination.geometry.location,
-      waypoints: [{
-        lat: rideData.waypoints[0].geometry.location.lat,
-        lng: rideData.waypoints[0].geometry.location.lng
-      }]
+      destination: rideData.destination,
+      origin: rideData.origin,
     };
 
     // Make a POST request to Flask server to calculate ride time with parameters
-    const apiResponse = await axios.post(process.env.FLASK_URI, cleanRideData);
+    const apiResponse = await axios.post(process.env.FLASK_URI_TWO, cleanRideData);
     
     // Create a new Ride instance with ride time
     const ride = new Ride({
       destination: rideData.destination,
       arrivalTime: rideData.time,
       rideTime: apiResponse.data.ride_time,
-      waypoints: rideData.waypoints,
-      routes: apiResponse.data.routes
+      waypoints: [rideData.origin],
+      routes: apiResponse.data.routes,
+      dynamic: ""
     });
     
     // Save the ride
@@ -64,6 +62,7 @@ router.put('/:id', async (request, response) => {
     ride.rideTime = updateData.rideTime;
     ride.waypoints = updateData.waypoints;
     ride.routes = updateData.routes;
+    ride.dynamic = updateData.dynamic;
 
     // Save the updated ride
     const updatedRide = await ride.save();
