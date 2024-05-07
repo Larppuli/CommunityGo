@@ -2,6 +2,7 @@ const express = require('express');
 const cors = require('cors');
 const bodyParser = require('body-parser');
 const mongoose = require('mongoose');
+const { exec } = require('child_process');
 require('dotenv').config();
 
 // Import route handlers
@@ -34,4 +35,23 @@ app.use('/rides', rideRoutes);
 const PORT = process.env.PORT || 3001;
 app.listen(PORT, () => {
   console.log(`Server started on port ${PORT}`);
+  
+  // Run Python scripts for ridetime calculating
+  exec('python services/multiPointRidetime.py', (error, stdout, stderr) => {
+    if (error) {
+      console.error(`Error running multiPointRidetime.py: ${error}`);
+      return;
+    }
+    console.log(`Output from multiPointRidetime.py: ${stdout}`);
+    console.error(`Errors from multiPointRidetime.py: ${stderr}`);
+  });
+
+  exec('python services/twoPointRidetime.py', (error, stdout, stderr) => {
+    if (error) {
+      console.error(`Error running twoPointRidetime.py: ${error}`);
+      return;
+    }
+    console.log(`Output from twoPointRidetime.py: ${stdout}`);
+    console.error(`Errors from twoPointRidetime.py: ${stderr}`);
+  });
 });
