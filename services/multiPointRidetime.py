@@ -32,7 +32,6 @@ def calculate_ride_time():
             total_duration_seconds += int(leg['duration']['value'])
         shortest_duration = total_duration_seconds // 60
         bestRoutes = data['routes']
-        bestUrl = url
         stops.insert(0, origin)
         for i in range(len(stops)-1):
             possibleOrigin = stops[i+1]
